@@ -22,7 +22,6 @@
 		<!-- Don't let your Mac use a crazy non-standard encoding -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<gwt.style>DETAILED</gwt.style>
 	</properties>
 
 	<dependencyManagement>
@@ -54,12 +53,12 @@
 			<artifactId>gwt-dev</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>junit</groupId> -->
-		<!-- <artifactId>junit</artifactId> -->
-		<!-- <version>4.11</version> -->
-		<!-- <scope>test</scope> -->
-		<!-- </dependency> -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -107,13 +106,13 @@
 			</plugin>
 
 			<!-- Skip normal test execution, we use gwt:test instead -->
-			<!-- <plugin> -->
-			<!-- <artifactId>maven-surefire-plugin</artifactId> -->
-			<!-- <version>2.17</version> -->
-			<!-- <configuration> -->
-			<!-- <skip>true</skip> -->
-			<!-- </configuration> -->
-			<!-- </plugin> -->
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.17</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
 
 			<plugin>
 				<artifactId>maven-clean-plugin</artifactId>
@@ -140,6 +139,14 @@
 							<directory>${basedir}/src/main</directory>
 							<includes>
 								<include>**/gwt-unitCache/**</include>
+							</includes>
+							<followSymlinks>false</followSymlinks>
+						</fileset>
+						<fileset>
+							<directory>${basedir}</directory>
+							<includes>
+								<include>**/www-test/**</include>
+								<include>**/test-classes/**</include>
 							</includes>
 							<followSymlinks>false</followSymlinks>
 						</fileset>
