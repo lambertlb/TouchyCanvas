@@ -4,5 +4,5 @@
 /src/main/webapp/WEB-INF/deploy/
 /target/
 src/main/gwt-unitCache/
-
 /test-classes/
+/www-test/
