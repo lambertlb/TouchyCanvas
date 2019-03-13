@@ -1,290 +1,267 @@
 package per.lambert.touchyCanvas.client;
 
-import com.google.gwt.canvas.client.Canvas;
-import com.google.gwt.dom.client.ImageElement;
-import com.google.gwt.event.dom.client.LoadEvent;
-import com.google.gwt.event.dom.client.LoadHandler;
-import com.google.gwt.event.dom.client.MouseDownEvent;
-import com.google.gwt.event.dom.client.MouseDownHandler;
-import com.google.gwt.event.dom.client.MouseMoveEvent;
-import com.google.gwt.event.dom.client.MouseMoveHandler;
-import com.google.gwt.event.dom.client.MouseUpEvent;
-import com.google.gwt.event.dom.client.MouseUpHandler;
-import com.google.gwt.event.dom.client.MouseWheelEvent;
-import com.google.gwt.event.dom.client.MouseWheelHandler;
-import com.google.gwt.event.dom.client.TouchEndEvent;
+/*
+ * Copyright 2010 Google Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+import com.google.gwt.canvas.dom.client.Context;
+import com.google.gwt.canvas.dom.client.Context2d;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.CanvasElement;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.PartialSupport;
+import com.google.gwt.event.dom.client.TouchCancelHandler;
 import com.google.gwt.event.dom.client.TouchEndHandler;
-import com.google.gwt.event.dom.client.TouchMoveEvent;
 import com.google.gwt.event.dom.client.TouchMoveHandler;
-import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.event.dom.client.TouchStartHandler;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.AbsolutePanel;
-import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.LayoutPanel;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.ui.FocusWidget;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.googlecode.mgwt.dom.client.event.tap.HasTapHandlers;
+import com.googlecode.mgwt.dom.client.event.tap.TapEvent;
+import com.googlecode.mgwt.dom.client.event.tap.TapHandler;
+import com.googlecode.mgwt.dom.client.event.touch.HasTouchHandlers;
+import com.googlecode.mgwt.dom.client.event.touch.TouchHandler;
+import com.googlecode.mgwt.dom.client.recognizer.longtap.HasLongTapHandlers;
+import com.googlecode.mgwt.dom.client.recognizer.longtap.LongTapEvent;
+import com.googlecode.mgwt.dom.client.recognizer.longtap.LongTapHandler;
+import com.googlecode.mgwt.dom.client.recognizer.pinch.HasPinchHandlers;
+import com.googlecode.mgwt.dom.client.recognizer.pinch.PinchEvent;
+import com.googlecode.mgwt.dom.client.recognizer.pinch.PinchHandler;
+import com.googlecode.mgwt.dom.client.recognizer.swipe.HasSwipeHandlers;
+import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeEndEvent;
+import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeEndHandler;
+import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeMoveEvent;
+import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeMoveHandler;
+import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeStartEvent;
+import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeStartHandler;
+import com.googlecode.mgwt.ui.client.widget.touch.GestureUtility;
+import com.googlecode.mgwt.ui.client.widget.touch.TouchWidgetImpl;
 
-public class ImageCanvas extends AbsolutePanel implements MouseWheelHandler, MouseDownHandler, MouseMoveHandler, MouseUpHandler, TouchStartHandler, TouchEndHandler, TouchMoveHandler {
-	/**
-	 * Offset for clearing rectangle.
-	 */
-	private static final int CLEAR_OFFEST = -10;
-	/**
-	 * Default zoom constant.
-	 */
-	private static final double DEFAULT_ZOOM = 1.1;
-	/**
-	 * Image with picture.
-	 */
-	private Image image;
-	/**
-	 * image context for drawing.
-	 */
-	private ImageElement imageElement;
-	/**
-	 * Main canvas that is drawn.
-	 */
-	private Canvas canvas;
-	/**
-	 * background canvas for temporary drawing.
-	 */
-	private Canvas backCanvas;
-	/**
-	 * Hidden panel to handle loading the image.
-	 */
-	private LayoutPanel hiddenPanel;
-	/**
-	 * Width of actual image.
-	 */
-	private int imageWidth = 0;
-	/**
-	 * Height of actual image.
-	 */
-	private int imageHeight = 0;
-	/**
-	 * Width of parent window.
-	 */
-	private int parentWidth = 0;
-	/**
-	 * Height of parent window.
-	 */
-	private int parentHeight = 0;
-	/**
-	 * current zoom factor for image.
-	 */
-	private double totalZoom = 1;
-	/**
-	 * Maximum zoom factor. We do not allow zooming out farther than the initial calculated zoom that fills the parent.
-	 */
-	private double maxZoom = .05;
-	/**
-	 * Offset of image in the horizontal direction.
-	 */
-	private double offsetX = 0;
-	/**
-	 * Offset of image in the vertical direction.
-	 */
-	private double offsetY = 0;
-	/**
-	 * Used by pan control.
-	 */
-	private boolean mouseDown = false;
-	/**
-	 * X position of mouse down.
-	 */
-	private double mouseDownXPos = 0;
-	/**
-	 * Y position of mouse down.
-	 */
-	private double mouseDownYPos = 0;
+/**
+ * A widget representing a &lt;canvas&gt; element.
+ * 
+ * This widget may not be supported on all browsers.
+ */
+@PartialSupport
+public class ImageCanvas extends FocusWidget implements HasTouchHandlers, HasTapHandlers, HasPinchHandlers, HasSwipeHandlers, HasLongTapHandlers {
+	private static final TouchWidgetImpl impl = GWT.create(TouchWidgetImpl.class);
 
-	public ImageCanvas() {
-		image = new Image();
-		image.addLoadHandler(new LoadHandler() {
-			public void onLoad(final LoadEvent event) {
-				setupImage();
-			}
-		});
-		canvas = Canvas.createIfSupported();
-		backCanvas = Canvas.createIfSupported();
-		hiddenPanel = new LayoutPanel();
-		hiddenPanel.add(image);
-		hiddenPanel.setVisible(false);
-
-		canvas.addMouseWheelHandler(this);
-		canvas.addMouseMoveHandler(this);
-		canvas.addMouseDownHandler(this);
-		canvas.addMouseUpHandler(this);
-
-		super.add(canvas, 0, 0);
-		super.add(hiddenPanel, -1, -1);
-	}
+	protected final GestureUtility gestureUtility;
 
 	/**
-	 * Tell image where picture is.
+	 * Return a new {@link Canvas} if supported, and null otherwise.
 	 * 
-	 * @param imageURL URL to picture
+	 * @return a new {@link Canvas} if supported, and null otherwise
 	 */
-	public void setImage(final String imageURL) {
-		image.setUrl(imageURL);
+	public static ImageCanvas createIfSupported() {
+		CanvasElement element = Document.get().createCanvasElement();
+		return new ImageCanvas(element);
 	}
 
 	/**
-	 * Called when image is loaded
+	 * Wrap an existing canvas element. The element must already be attached to the document. If the element is removed from the document, you must call {@link RootPanel#detachNow(Widget)}. Note: This method can return null if there is no support for canvas by
+	 * the current browser.
+	 *
+	 * @param element the element to wrap
+	 * @return the {@link Canvas} widget or null if canvas is not supported by the current browser.
 	 */
-	private void setupImage() {
-		totalZoom = 1;
-		offsetX = 0;
-		offsetY = 0;
-		this.imageElement = (ImageElement) image.getElement().cast();
-		parentWidthChanged(getParent().getOffsetWidth(), getParent().getOffsetHeight());
+	public static ImageCanvas wrap(CanvasElement element) {
+		if (!isSupported(element)) {
+			return null;
+		}
+		assert Document.get().getBody().isOrHasChild(element);
+		ImageCanvas canvas = new ImageCanvas(element);
+
+		// Mark it attached and remember it for cleanup.
+		canvas.onAttach();
+		RootPanel.detachOnWindowClose(canvas);
+
+		return canvas;
 	}
 
 	/**
-	 * Parent window size has changed.
+	 * Runtime check for whether the canvas element is supported in this browser.
 	 * 
-	 * @param widthOfParent new width of window.
-	 * @param heightOfParent new height of window.
+	 * @return whether the canvas element is supported
 	 */
-	public final void parentWidthChanged(final int widthOfParent, final int heightOfParent) {
-		parentWidth = widthOfParent;
-		parentHeight = heightOfParent;
-		imageWidth = image.getWidth();
-		imageHeight = image.getHeight();
+	public static boolean isSupported() {
+		return isSupported(Document.get().createCanvasElement());
+	}
 
-		canvas.setWidth(parentWidth + "px");
-		canvas.setCoordinateSpaceWidth(parentWidth);
-		canvas.setHeight(parentHeight + "px");
-		canvas.setCoordinateSpaceHeight(parentHeight);
-
-		backCanvas.setWidth(parentWidth + "px");
-		backCanvas.setCoordinateSpaceWidth(parentWidth);
-		backCanvas.setHeight(parentHeight + "px");
-		backCanvas.setCoordinateSpaceHeight(parentHeight);
-
-		calculateStartingZoom();
-		backCanvas.getContext2d().setTransform(totalZoom, 0, 0, totalZoom, 0, 0);
-		drawEverything();
+	private static boolean isSupported(CanvasElement element) {
+		return true;
 	}
 
 	/**
-	 * Calculate the starting zoom factor so that one side of the image exactly fills the parent.
+	 * Protected constructor. Use {@link #createIfSupported()} to create a Canvas.
 	 */
-	private void calculateStartingZoom() {
-		if (isScaleByWidth()) {
-			totalZoom = (double) parentWidth / (double) imageWidth;
-		} else {
-			totalZoom = (double) parentHeight / (double) imageHeight;
-		}
+	private ImageCanvas(CanvasElement element) {
+		setElement(element);
+		gestureUtility = new GestureUtility(this);
 	}
 
 	/**
-	 * Should we scale by width.
+	 * Returns the attached Canvas Element.
 	 * 
-	 * @return true if we should scale by width
+	 * @return the Canvas Element
 	 */
-	private boolean isScaleByWidth() {
-		double scaleWidth = (double) parentWidth / (double) imageWidth;
-		double scaleHeight = (double) parentHeight / (double) imageHeight;
-		return scaleWidth < scaleHeight;
+	public CanvasElement getCanvasElement() {
+		return this.getElement().cast();
 	}
 
 	/**
-	 * Main method for drawing image.
-	 */
-	public final void drawEverything() {
-		backCanvas.getContext2d().clearRect(CLEAR_OFFEST, CLEAR_OFFEST, imageWidth + 50, imageHeight + 50);
-		backCanvas.getContext2d().setTransform(totalZoom, 0, 0, totalZoom, offsetX, offsetY);
-		backCanvas.getContext2d().drawImage(imageElement, 0, 0);
-		handleAllDrawing();
-	}
-
-	/**
-	 * Handle drawing everything.
-	 */
-	public final void handleAllDrawing() {
-		canvas.getContext2d().clearRect(CLEAR_OFFEST, CLEAR_OFFEST, parentWidth, parentHeight);
-		canvas.getContext2d().drawImage(backCanvas.getCanvasElement(), 0, 0);
-	}
-
-	@Override
-	public void onMouseUp(MouseUpEvent event) {
-		this.mouseDown = false;
-	}
-
-	@Override
-	public void onMouseMove(MouseMoveEvent event) {
-		if (mouseDown) {
-			handleMouseMove(event);
-		}
-	}
-
-	/**
-	 * Handle mouse move.
+	 * Gets the rendering context that may be used to draw on this canvas.
 	 * 
-	 * @param event event data
+	 * @param contextId the context id as a String
+	 * @return the canvas rendering context
 	 */
-	private void handleMouseMove(final MouseMoveEvent event) {
-		double xPos = event.getRelativeX(image.getElement());
-		double yPos = event.getRelativeY(image.getElement());
-		offsetX += (xPos - mouseDownXPos);
-		offsetY += (yPos - mouseDownYPos);
-		try {
-			drawEverything();
-		} catch (Exception ex) {
-			mouseDownXPos = xPos;
-			mouseDownYPos = yPos;
-		}
-		mouseDownXPos = xPos;
-		mouseDownYPos = yPos;
+	public Context getContext(String contextId) {
+		return getCanvasElement().getContext(contextId);
+	}
+
+	/**
+	 * Returns a 2D rendering context.
+	 * 
+	 * This is a convenience method, see {@link #getContext(String)}.
+	 * 
+	 * @return a 2D canvas rendering context
+	 */
+	public Context2d getContext2d() {
+		return getCanvasElement().getContext2d();
+	}
+
+	/**
+	 * Gets the height of the internal canvas coordinate space.
+	 * 
+	 * @return the height, in pixels
+	 * @see #setCoordinateSpaceHeight(int)
+	 */
+	public int getCoordinateSpaceHeight() {
+		return getCanvasElement().getHeight();
+	}
+
+	/**
+	 * Gets the width of the internal canvas coordinate space.
+	 * 
+	 * @return the width, in pixels
+	 * @see #setCoordinateSpaceWidth(int)
+	 */
+	public int getCoordinateSpaceWidth() {
+		return getCanvasElement().getWidth();
+	}
+
+	/**
+	 * Sets the height of the internal canvas coordinate space.
+	 * 
+	 * @param height the height, in pixels
+	 * @see #getCoordinateSpaceHeight()
+	 */
+	public void setCoordinateSpaceHeight(int height) {
+		getCanvasElement().setHeight(height);
+	}
+
+	/**
+	 * Sets the width of the internal canvas coordinate space.
+	 * 
+	 * @param width the width, in pixels
+	 * @see #getCoordinateSpaceWidth()
+	 */
+	public void setCoordinateSpaceWidth(int width) {
+		getCanvasElement().setWidth(width);
+	}
+
+	/**
+	 * Returns a data URL for the current content of the canvas element.
+	 * 
+	 * @return a data URL for the current content of this element.
+	 */
+	public String toDataUrl() {
+		return getCanvasElement().toDataUrl();
+	}
+
+	/**
+	 * Returns a data URL for the current content of the canvas element, with a specified type.
+	 * 
+	 * @param type the type of the data url, e.g., image/jpeg or image/png.
+	 * @return a data URL for the current content of this element with the specified type.
+	 */
+	public String toDataUrl(String type) {
+		return getCanvasElement().toDataUrl(type);
 	}
 
 	@Override
-	public void onMouseDown(MouseDownEvent event) {
-		mouseDownXPos = event.getRelativeX(image.getElement());
-		mouseDownYPos = event.getRelativeY(image.getElement());
-		this.mouseDown = true;
+	public HandlerRegistration addTouchStartHandler(TouchStartHandler handler) {
+		return impl.addTouchStartHandler(this, handler);
+
 	}
 
 	@Override
-	public void onMouseWheel(MouseWheelEvent event) {
-		int move = event.getDeltaY();
-		double xPos = (event.getRelativeX(canvas.getElement()));
-		double yPos = (event.getRelativeY(canvas.getElement()));
+	public HandlerRegistration addTouchMoveHandler(TouchMoveHandler handler) {
+		return impl.addTouchMoveHandler(this, handler);
 
-		double zoom = DEFAULT_ZOOM;
-		if (move >= 0) {
-			zoom = 1 / DEFAULT_ZOOM;
-		}
-
-		double newX = (xPos - offsetX) / totalZoom;
-		double newY = (yPos - offsetY) / totalZoom;
-		double xPosition = (-newX * zoom) + newX;
-		double yPosition = (-newY * zoom) + newY;
-
-		zoom = zoom * totalZoom;
-		if (zoom < maxZoom) {
-			zoom = maxZoom;
-		} else {
-			offsetX += (xPosition * totalZoom);
-			offsetY += (yPosition * totalZoom);
-		}
-		totalZoom = zoom;
-		drawEverything();
 	}
 
 	@Override
-	public void onTouchMove(TouchMoveEvent event) {
-		Window.alert("Touch move");
+	public HandlerRegistration addTouchCancelHandler(TouchCancelHandler handler) {
+		return impl.addTouchCancelHandler(this, handler);
 	}
 
 	@Override
-	public void onTouchEnd(TouchEndEvent event) {
-		Window.alert("Touch end");
+	public HandlerRegistration addTouchEndHandler(TouchEndHandler handler) {
+		return impl.addTouchEndHandler(this, handler);
 	}
 
 	@Override
-	public void onTouchStart(TouchStartEvent event) {
-		Window.alert("Touch start");
+	public HandlerRegistration addTouchHandler(TouchHandler handler) {
+		return impl.addTouchHandler(this, handler);
 	}
 
+	@Override
+	public HandlerRegistration addTapHandler(TapHandler handler) {
+		gestureUtility.ensureTapRecognizer();
+		return addHandler(handler, TapEvent.getType());
+	}
+
+	@Override
+	public HandlerRegistration addSwipeStartHandler(SwipeStartHandler handler) {
+		gestureUtility.ensureSwipeRecognizer();
+		return addHandler(handler, SwipeStartEvent.getType());
+	}
+
+	@Override
+	public HandlerRegistration addSwipeMoveHandler(SwipeMoveHandler handler) {
+		gestureUtility.ensureSwipeRecognizer();
+		return addHandler(handler, SwipeMoveEvent.getType());
+	}
+
+	@Override
+	public HandlerRegistration addSwipeEndHandler(SwipeEndHandler handler) {
+		gestureUtility.ensureSwipeRecognizer();
+		return addHandler(handler, SwipeEndEvent.getType());
+	}
+
+	@Override
+	public HandlerRegistration addPinchHandler(PinchHandler handler) {
+		gestureUtility.ensurePinchRecognizer(this);
+		return addHandler(handler, PinchEvent.getType());
+	}
+
+	@Override
+	public HandlerRegistration addLongTapHandler(LongTapHandler handler) {
+		gestureUtility.ensureLongTapHandler();
+		return addHandler(handler, LongTapEvent.getType());
+	}
 }

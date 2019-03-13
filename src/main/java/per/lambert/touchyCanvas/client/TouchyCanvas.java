@@ -20,7 +20,7 @@ public class TouchyCanvas implements EntryPoint {
 	/**
 	 * Cavas with inage.
 	 */
-	private ImageCanvas imageCanvas;
+	private ImageCanvasPanel imageCanvas;
 	/**
 	 * This is the entry point method.
 	 */
@@ -28,7 +28,7 @@ public class TouchyCanvas implements EntryPoint {
 		rootLayoutPanel = RootLayoutPanel.get();
 		imagePanel = new LayoutPanel();
 		imagePanel.setSize("100%", "100%");
-		imageCanvas = new ImageCanvas();
+		imageCanvas = new ImageCanvasPanel();
 		imagePanel.add(imageCanvas);
 		rootLayoutPanel.add(imagePanel);
 		imageCanvas.setImage(constructPath() + "FallPanorama.jpg");

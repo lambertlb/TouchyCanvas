@@ -1,3 +1,4 @@
 eclipse.preferences.version=1
+jarsExcludedFromWebInfLib=C\:/Workspace/TouchyCanvas/lib/mgwt-2.0.0.jar
 warSrcDir=src/main/webapp
 warSrcDirIsOutput=true
