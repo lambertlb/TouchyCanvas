@@ -205,13 +205,11 @@ public class ImageCanvas extends FocusWidget implements HasTouchHandlers, HasTap
 	@Override
 	public HandlerRegistration addTouchStartHandler(TouchStartHandler handler) {
 		return impl.addTouchStartHandler(this, handler);
-
 	}
 
 	@Override
 	public HandlerRegistration addTouchMoveHandler(TouchMoveHandler handler) {
 		return impl.addTouchMoveHandler(this, handler);
-
 	}
 
 	@Override

@@ -1,7 +1,6 @@
 package per.lambert.touchyCanvas.client;
 
 import com.google.gwt.canvas.client.Canvas;
-import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.event.dom.client.LoadEvent;
 import com.google.gwt.event.dom.client.LoadHandler;
@@ -13,41 +12,26 @@ import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.event.dom.client.MouseWheelEvent;
 import com.google.gwt.event.dom.client.MouseWheelHandler;
-import com.google.gwt.event.dom.client.TouchCancelHandler;
+import com.google.gwt.event.dom.client.TouchCancelEvent;
 import com.google.gwt.event.dom.client.TouchEndEvent;
-import com.google.gwt.event.dom.client.TouchEndHandler;
 import com.google.gwt.event.dom.client.TouchMoveEvent;
 import com.google.gwt.event.dom.client.TouchMoveHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
-import com.google.gwt.event.dom.client.TouchStartHandler;
-import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.LayoutPanel;
-import com.googlecode.mgwt.dom.client.event.tap.HasTapHandlers;
-import com.googlecode.mgwt.dom.client.event.tap.TapEvent;
-import com.googlecode.mgwt.dom.client.event.tap.TapHandler;
 import com.googlecode.mgwt.dom.client.event.touch.HasTouchHandlers;
 import com.googlecode.mgwt.dom.client.event.touch.TouchHandler;
-import com.googlecode.mgwt.dom.client.recognizer.longtap.HasLongTapHandlers;
-import com.googlecode.mgwt.dom.client.recognizer.longtap.LongTapEvent;
-import com.googlecode.mgwt.dom.client.recognizer.longtap.LongTapHandler;
-import com.googlecode.mgwt.dom.client.recognizer.pinch.HasPinchHandlers;
 import com.googlecode.mgwt.dom.client.recognizer.pinch.PinchEvent;
 import com.googlecode.mgwt.dom.client.recognizer.pinch.PinchHandler;
-import com.googlecode.mgwt.dom.client.recognizer.swipe.HasSwipeHandlers;
 import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeEndEvent;
 import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeEndHandler;
 import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeMoveEvent;
 import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeMoveHandler;
 import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeStartEvent;
 import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeStartHandler;
-import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeEvent.DIRECTION;
-import com.googlecode.mgwt.ui.client.widget.touch.GestureUtility;
-import com.googlecode.mgwt.ui.client.widget.touch.TouchWidgetImpl;
 
-public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler, MouseDownHandler, MouseMoveHandler, MouseUpHandler {
+public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler, MouseDownHandler, MouseMoveHandler, MouseUpHandler, TouchHandler {
 	/**
 	 * Offset for clearing rectangle.
 	 */
@@ -157,6 +141,13 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 			@Override
 			public void onSwipeMove(SwipeMoveEvent event) {
 				doSwipeMove(event);
+			}
+		});
+		canvas.addPinchHandler(new PinchHandler() {
+			
+			@Override
+			public void onPinch(PinchEvent event) {
+				doPinch(event);
 			}
 		});
 
@@ -323,6 +314,10 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 			zoom = 1 / DEFAULT_ZOOM;
 		}
 
+		scaleCanvas(xPos, yPos, zoom);
+	}
+
+	private void scaleCanvas(double xPos, double yPos, double zoom) {
 		double newX = (xPos - offsetX) / totalZoom;
 		double newY = (yPos - offsetY) / totalZoom;
 		double xPosition = (-newX * zoom) + newX;
@@ -337,5 +332,34 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		}
 		totalZoom = zoom;
 		drawEverything();
+	}
+	
+	protected void doPinch(PinchEvent event) {
+		double xPos = event.getX();
+		double yPos = event.getY();
+		double zoom = event.getScaleFactor();
+		String message = "xpos = " + xPos + " yPos = " + yPos + " zoom = " +  zoom;
+		TouchyCanvas.addMessage(message);
+		scaleCanvas(xPos, yPos, zoom);
+	}
+
+	@Override
+	public void onTouchStart(TouchStartEvent event) {
+		TouchyCanvas.addMessage("Touch Start ");
+	}
+
+	@Override
+	public void onTouchMove(TouchMoveEvent event) {
+		TouchyCanvas.addMessage("Touch Move ");
+	}
+
+	@Override
+	public void onTouchEnd(TouchEndEvent event) {
+		TouchyCanvas.addMessage("Touch End ");
+	}
+
+	@Override
+	public void onTouchCancel(TouchCancelEvent event) {
+		TouchyCanvas.addMessage("Touch Cancel ");
 	}
 }

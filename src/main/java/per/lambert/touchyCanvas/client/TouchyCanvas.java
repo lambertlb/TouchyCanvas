@@ -1,18 +1,27 @@
 package per.lambert.touchyCanvas.client;
 
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Window.Location;
+import com.google.gwt.user.client.ui.DockLayoutPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.LayoutPanel;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.TextArea;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class TouchyCanvas implements EntryPoint {
+	private static TouchyCanvas instance;
 	/**
 	 * Root layout panel.
 	 */
 	private RootLayoutPanel rootLayoutPanel;
+	private DockLayoutPanel holder;
+	private HorizontalPanel messages;
+	private TextArea messageArea;
+	private StringBuilder messageBuilder;
 	/**
 	 * Panel to hold canvas.
 	 */
@@ -21,18 +30,31 @@ public class TouchyCanvas implements EntryPoint {
 	 * Cavas with inage.
 	 */
 	private ImageCanvasPanel imageCanvas;
+
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
 		rootLayoutPanel = RootLayoutPanel.get();
+		holder = new DockLayoutPanel(Unit.PX);
+		messages = new HorizontalPanel();
+		messages.setSize("100%", "100%");
+		messageArea = new TextArea();
+		messageArea.setSize("100%", "100%");
+		messageArea.setReadOnly(true);
+		messages.add(messageArea);
+		holder.addSouth(messages, 70);
 		imagePanel = new LayoutPanel();
 		imagePanel.setSize("100%", "100%");
 		imageCanvas = new ImageCanvasPanel();
 		imagePanel.add(imageCanvas);
-		rootLayoutPanel.add(imagePanel);
+		holder.add(imagePanel);
+		rootLayoutPanel.add(holder);
 		imageCanvas.setImage(constructPath() + "FallPanorama.jpg");
+		messageBuilder = new StringBuilder();
+		instance = this;
 	}
+
 	/**
 	 * Get proper web path.
 	 * 
@@ -47,4 +69,9 @@ public class TouchyCanvas implements EntryPoint {
 		return path;
 	}
 
+	public static void addMessage(final String message) {
+		instance.messageBuilder.append(message);
+		instance.messageBuilder.append(" , ");
+		instance.messageArea.setText(instance.messageBuilder.toString());
+	}
 }
