@@ -12,26 +12,21 @@ import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.event.dom.client.MouseWheelEvent;
 import com.google.gwt.event.dom.client.MouseWheelHandler;
-import com.google.gwt.event.dom.client.TouchCancelEvent;
-import com.google.gwt.event.dom.client.TouchEndEvent;
-import com.google.gwt.event.dom.client.TouchMoveEvent;
-import com.google.gwt.event.dom.client.TouchMoveHandler;
-import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.LayoutPanel;
-import com.googlecode.mgwt.dom.client.event.touch.HasTouchHandlers;
-import com.googlecode.mgwt.dom.client.event.touch.TouchHandler;
-import com.googlecode.mgwt.dom.client.recognizer.pinch.PinchEvent;
-import com.googlecode.mgwt.dom.client.recognizer.pinch.PinchHandler;
-import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeEndEvent;
-import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeEndHandler;
-import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeMoveEvent;
-import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeMoveHandler;
-import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeStartEvent;
-import com.googlecode.mgwt.dom.client.recognizer.swipe.SwipeStartHandler;
 
-public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler, MouseDownHandler, MouseMoveHandler, MouseUpHandler, TouchHandler {
+import per.lambert.touchyCanvas.client.touchHelper.DoubleTapEvent;
+import per.lambert.touchyCanvas.client.touchHelper.DoubleTapHandler;
+import per.lambert.touchyCanvas.client.touchHelper.TouchHelper;
+
+/**
+ * Panel to home a canvas tat can be scaled, panned and zoomed.
+ * 
+ * @author LLambert
+ *
+ */
+public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler, MouseDownHandler, MouseMoveHandler, MouseUpHandler {
 	/**
 	 * Offset for clearing rectangle.
 	 */
@@ -51,7 +46,7 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	/**
 	 * Main canvas that is drawn.
 	 */
-	private ImageCanvas canvas;
+	private Canvas canvas;
 	/**
 	 * background canvas for temporary drawing.
 	 */
@@ -104,7 +99,14 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 * Y position of mouse down.
 	 */
 	private double mouseDownYPos = 0;
+	/**
+	 * Helper for mobile touches.
+	 */
+	private TouchHelper touchHelper;
 
+	/**
+	 * Constructor.
+	 */
 	public ImageCanvasPanel() {
 		image = new Image();
 		image.addLoadHandler(new LoadHandler() {
@@ -112,7 +114,7 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 				setupImage();
 			}
 		});
-		canvas = ImageCanvas.createIfSupported();
+		canvas = Canvas.createIfSupported();
 		backCanvas = Canvas.createIfSupported();
 		hiddenPanel = new LayoutPanel();
 		hiddenPanel.add(image);
@@ -122,37 +124,17 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		canvas.addMouseMoveHandler(this);
 		canvas.addMouseDownHandler(this);
 		canvas.addMouseUpHandler(this);
-		canvas.addSwipeStartHandler(new SwipeStartHandler() {
-
-			@Override
-			public void onSwipeStart(SwipeStartEvent event) {
-				doSwiperStart(event);
-			}
-		});
-		canvas.addSwipeEndHandler(new SwipeEndHandler() {
-
-			@Override
-			public void onSwipeEnd(SwipeEndEvent event) {
-				doSwipeEnd(event);
-			}
-		});
-		canvas.addSwipeMoveHandler(new SwipeMoveHandler() {
-
-			@Override
-			public void onSwipeMove(SwipeMoveEvent event) {
-				doSwipeMove(event);
-			}
-		});
-		canvas.addPinchHandler(new PinchHandler() {
-			
-			@Override
-			public void onPinch(PinchEvent event) {
-				doPinch(event);
-			}
-		});
 
 		super.add(canvas, 0, 0);
 		super.add(hiddenPanel, -1, -1);
+		touchHelper = new TouchHelper(canvas);
+		touchHelper.addDoubleTapHandler(new DoubleTapHandler() {
+			
+			@Override
+			public void onDoubleTap(final DoubleTapEvent event) {
+				doDoubleTap(event);
+			}
+		});
 	}
 
 	/**
@@ -165,7 +147,7 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	}
 
 	/**
-	 * Called when image is loaded
+	 * Called when image is loaded.
 	 */
 	private void setupImage() {
 		totalZoom = 1;
@@ -238,37 +220,36 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 * Handle drawing everything.
 	 */
 	public final void handleAllDrawing() {
-		canvas.getContext2d().clearRect(CLEAR_OFFEST, CLEAR_OFFEST, parentWidth +100, parentHeight + 100);
+		canvas.getContext2d().clearRect(CLEAR_OFFEST, CLEAR_OFFEST, parentWidth + 100, parentHeight + 100);
 		canvas.getContext2d().drawImage(backCanvas.getCanvasElement(), 0, 0);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public void onMouseDown(MouseDownEvent event) {
-//		mouseDownXPos = event.getRelativeX(image.getElement());
-//		mouseDownYPos = event.getRelativeY(image.getElement());
-//		this.mouseDown = true;
-	}
-
-	protected void doSwiperStart(SwipeStartEvent event) {
-		mouseDownXPos = event.getTouch().getPageX();
-		mouseDownYPos = event.getTouch().getPageY();
+	public void onMouseDown(final MouseDownEvent event) {
+		mouseDownXPos = event.getRelativeX(image.getElement());
+		mouseDownYPos = event.getRelativeY(image.getElement());
 		this.mouseDown = true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public void onMouseUp(MouseUpEvent event) {
-//		this.mouseDown = false;
-	}
-
-	protected void doSwipeEnd(SwipeEndEvent event) {
+	public void onMouseUp(final MouseUpEvent event) {
 		this.mouseDown = false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public void onMouseMove(MouseMoveEvent event) {
-//		if (mouseDown) {
-//			handleMouseMove(event);
-//		}
+	public void onMouseMove(final MouseMoveEvent event) {
+		if (mouseDown) {
+			handleMouseMove(event);
+		}
 	}
 
 	/**
@@ -282,7 +263,13 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		handleCanvasMove(xPos, yPos);
 	}
 
-	private void handleCanvasMove(double xPos, double yPos) {
+	/**
+	 * Handle panning canvas.
+	 * 
+	 * @param xPos center X of pan
+	 * @param yPos center Y of pan
+	 */
+	private void handleCanvasMove(final double xPos, final double yPos) {
 		offsetX += (xPos - mouseDownXPos);
 		offsetY += (yPos - mouseDownYPos);
 		try {
@@ -295,16 +282,11 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		mouseDownYPos = yPos;
 	}
 
-	protected void doSwipeMove(SwipeMoveEvent event) {
-		if (mouseDown) {
-			double xPos = event.getTouch().getPageX();
-			double yPos = event.getTouch().getPageY();
-			handleCanvasMove(xPos, yPos);
-		}
-	}
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public void onMouseWheel(MouseWheelEvent event) {
+	public void onMouseWheel(final MouseWheelEvent event) {
 		int move = event.getDeltaY();
 		double xPos = (event.getRelativeX(canvas.getElement()));
 		double yPos = (event.getRelativeY(canvas.getElement()));
@@ -317,49 +299,34 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		scaleCanvas(xPos, yPos, zoom);
 	}
 
-	private void scaleCanvas(double xPos, double yPos, double zoom) {
+	/**
+	 * Scale canvas base on delta mouse positions.
+	 * 
+	 * @param xPos current X
+	 * @param yPos current Y
+	 * @param zoom zoom factor
+	 */
+	private void scaleCanvas(final double xPos, final double yPos, final double zoom) {
 		double newX = (xPos - offsetX) / totalZoom;
 		double newY = (yPos - offsetY) / totalZoom;
 		double xPosition = (-newX * zoom) + newX;
 		double yPosition = (-newY * zoom) + newY;
 
-		zoom = zoom * totalZoom;
-		if (zoom < maxZoom) {
-			zoom = maxZoom;
+		double newZoom = zoom * totalZoom;
+		if (newZoom < maxZoom) {
+			newZoom = maxZoom;
 		} else {
 			offsetX += (xPosition * totalZoom);
 			offsetY += (yPosition * totalZoom);
 		}
-		totalZoom = zoom;
+		totalZoom = newZoom;
 		drawEverything();
 	}
-	
-	protected void doPinch(PinchEvent event) {
-		double xPos = event.getX();
-		double yPos = event.getY();
-		double zoom = event.getScaleFactor();
-		String message = "xpos = " + xPos + " yPos = " + yPos + " zoom = " +  zoom;
-		TouchyCanvas.addMessage(message);
-		scaleCanvas(xPos, yPos, zoom);
+	/**
+	 * Handle double tap.
+	 * @param event with data.
+	 */
+	protected void doDoubleTap(final DoubleTapEvent event) {
 	}
 
-	@Override
-	public void onTouchStart(TouchStartEvent event) {
-		TouchyCanvas.addMessage("Touch Start ");
-	}
-
-	@Override
-	public void onTouchMove(TouchMoveEvent event) {
-		TouchyCanvas.addMessage("Touch Move ");
-	}
-
-	@Override
-	public void onTouchEnd(TouchEndEvent event) {
-		TouchyCanvas.addMessage("Touch End ");
-	}
-
-	@Override
-	public void onTouchCancel(TouchCancelEvent event) {
-		TouchyCanvas.addMessage("Touch Cancel ");
-	}
 }

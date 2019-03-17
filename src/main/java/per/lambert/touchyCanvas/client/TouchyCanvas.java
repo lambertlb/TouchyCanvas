@@ -13,14 +13,29 @@ import com.google.gwt.user.client.ui.TextArea;
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class TouchyCanvas implements EntryPoint {
+	/**
+	 * Static instance to allow message handling.
+	 */
 	private static TouchyCanvas instance;
 	/**
 	 * Root layout panel.
 	 */
 	private RootLayoutPanel rootLayoutPanel;
+	/**
+	 * Main holder of content.
+	 */
 	private DockLayoutPanel holder;
+	/**
+	 * Panel for messages.
+	 */
 	private HorizontalPanel messages;
+	/**
+	 * Widget for messages.
+	 */
 	private TextArea messageArea;
+	/**
+	 * Builder of messages.
+	 */
 	private StringBuilder messageBuilder;
 	/**
 	 * Panel to hold canvas.
@@ -69,6 +84,10 @@ public class TouchyCanvas implements EntryPoint {
 		return path;
 	}
 
+	/**
+	 * Add message to window.
+	 * @param message to add
+	 */
 	public static void addMessage(final String message) {
 		instance.messageBuilder.append(message);
 		instance.messageBuilder.append(" , ");
