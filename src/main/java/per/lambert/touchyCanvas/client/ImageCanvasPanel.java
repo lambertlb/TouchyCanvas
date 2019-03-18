@@ -18,6 +18,12 @@ import com.google.gwt.user.client.ui.LayoutPanel;
 
 import per.lambert.touchyCanvas.client.touchHelper.DoubleTapEvent;
 import per.lambert.touchyCanvas.client.touchHelper.DoubleTapHandler;
+import per.lambert.touchyCanvas.client.touchHelper.PanEndEvent;
+import per.lambert.touchyCanvas.client.touchHelper.PanEndHandler;
+import per.lambert.touchyCanvas.client.touchHelper.PanEvent;
+import per.lambert.touchyCanvas.client.touchHelper.PanHandler;
+import per.lambert.touchyCanvas.client.touchHelper.PanStartEvent;
+import per.lambert.touchyCanvas.client.touchHelper.PanStartHandler;
 import per.lambert.touchyCanvas.client.touchHelper.TouchHelper;
 
 /**
@@ -135,6 +141,27 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 				doDoubleTap(event);
 			}
 		});
+		touchHelper.addPanStartHandler(new PanStartHandler() {
+			
+			@Override
+			public void onPanStart(final PanStartEvent event) {
+				doPanStart(event);
+			}
+		});
+		touchHelper.addPanEndHandler(new PanEndHandler() {
+			
+			@Override
+			public void onPanEnd(final PanEndEvent event) {
+				doPanEnd(event);
+			}
+		});
+		touchHelper.addPanHandler(new PanHandler() {
+			
+			@Override
+			public void onPan(final PanEvent event) {
+				doPan(event);
+			}
+		});
 	}
 
 	/**
@@ -233,12 +260,28 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		mouseDownYPos = event.getRelativeY(image.getElement());
 		this.mouseDown = true;
 	}
+	/**
+	 * Handle Pan start.
+	 * @param event with data
+	 */
+	protected void doPanStart(final PanStartEvent event) {
+		mouseDownXPos = event.getTouchInformation().getPageX();
+		mouseDownYPos = event.getTouchInformation().getPageY();
+		this.mouseDown = true;
+	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public void onMouseUp(final MouseUpEvent event) {
+		this.mouseDown = false;
+	}
+	/**
+	 * Handle Pan end.
+	 * @param event with data
+	 */
+	protected void doPanEnd(final PanEndEvent event) {
 		this.mouseDown = false;
 	}
 
@@ -251,6 +294,17 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 			handleMouseMove(event);
 		}
 	}
+	/**
+	 * Handle Pan.
+	 * @param event with data
+	 */
+	protected void doPan(final PanEvent event) {
+		double xPos = event.getTouchInformation().getPageX();
+		double yPos = event.getTouchInformation().getPageY();
+		handleCanvasMove(xPos, yPos);
+	}
+
+
 
 	/**
 	 * Handle mouse move.

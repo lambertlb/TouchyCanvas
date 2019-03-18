@@ -3,14 +3,15 @@ package per.lambert.touchyCanvas.client.touchHelper;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Touch;
 import com.google.gwt.event.shared.GwtEvent;
+import com.google.gwt.event.shared.GwtEvent.Type;
 
 /**
- * Event for handling double tap.
+ * Event for handling pan end.
  * 
  * @author LLambert
  *
  */
-public class DoubleTapEvent extends GwtEvent<DoubleTapHandler> {
+public class PanEndEvent extends GwtEvent<PanEndHandler> {
 
 	/**
 	 * Information about touch.
@@ -43,14 +44,14 @@ public class DoubleTapEvent extends GwtEvent<DoubleTapHandler> {
 	/**
 	 * Type of event.
 	 */
-	private static Type<DoubleTapHandler> eventType = new Type<DoubleTapHandler>();
+	private static Type<PanEndHandler> eventType = new Type<PanEndHandler>();
 
 	/**
 	 * Get event type.
 	 * 
 	 * @return event type
 	 */
-	public static Type<DoubleTapHandler> getType() {
+	public static Type<PanEndHandler> getType() {
 		return eventType;
 	}
 
@@ -60,16 +61,15 @@ public class DoubleTapEvent extends GwtEvent<DoubleTapHandler> {
 	 * @param touchData data about touch
 	 * @param targetElement element that was targeted.
 	 */
-	public DoubleTapEvent(final Touch touchData, final Element targetElement) {
+	public PanEndEvent(final Touch touchData, final Element targetElement) {
 		touchInformation = new TouchInformation(touchData);
 		this.targetElement = targetElement;
 	}
-
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Type<DoubleTapHandler> getAssociatedType() {
+	public Type<PanEndHandler> getAssociatedType() {
 		return eventType;
 	}
 
@@ -77,8 +77,8 @@ public class DoubleTapEvent extends GwtEvent<DoubleTapHandler> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void dispatch(final DoubleTapHandler handler) {
-		handler.onDoubleTap(this);
+	protected void dispatch(final PanEndHandler handler) {
+		handler.onPanEnd(this);
 	}
 
 }

@@ -4,11 +4,13 @@ import java.util.Date;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Touch;
 import com.google.gwt.event.dom.client.HasAllTouchHandlers;
 import com.google.gwt.event.dom.client.TouchCancelEvent;
 import com.google.gwt.event.dom.client.TouchCancelHandler;
 import com.google.gwt.event.dom.client.TouchEndEvent;
 import com.google.gwt.event.dom.client.TouchEndHandler;
+import com.google.gwt.event.dom.client.TouchEvent;
 import com.google.gwt.event.dom.client.TouchMoveEvent;
 import com.google.gwt.event.dom.client.TouchMoveHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
@@ -22,7 +24,7 @@ import per.lambert.touchyCanvas.client.TouchyCanvas;
 /**
  * Helper to encapsulate functions for managing touches.
  * 
- * It will analyze evernt to see if the represent higher level methods lime pan and zoom.
+ * It will analyze touch events to see if they represent higher level methods like pan and zoom.
  * 
  * @author LLambert
  *
@@ -34,7 +36,7 @@ public class TouchHelper {
 	 * @author LLambert
 	 *
 	 */
-	private enum InteractionType {
+	private enum Action {
 		/**
 		 * Invalid interaction.
 		 */
@@ -68,7 +70,7 @@ public class TouchHelper {
 	/**
 	 * Current interaction.
 	 */
-	private InteractionType interaction = InteractionType.INVALID;
+	private Action currentAction = Action.INVALID;
 
 	/**
 	 * Constructor.
@@ -123,7 +125,6 @@ public class TouchHelper {
 		firstMove = true;
 		amountOfFingers = event.getTouches().length();
 		detectDoubleTap(event);
-		TouchyCanvas.addMessage("Touch Start ");
 	}
 
 	/**
@@ -132,7 +133,69 @@ public class TouchHelper {
 	 * @param event touch move event.
 	 */
 	public void doTouchMove(final TouchMoveEvent event) {
-		TouchyCanvas.addMessage("Touch Move ");
+		if (firstMove) {
+			computeAction(event);
+		} else {
+			if (currentAction == Action.PAN) {
+				widgetToTouch.fireEvent(new PanEvent(event.getChangedTouches().get(0), computeTargetElement(event.getNativeEvent())));
+				cancelEvent(event.getNativeEvent());
+			}
+		}
+		firstMove = false;
+	}
+
+	/**
+	 * Figure out what action needs to be done.
+	 * 
+	 * @param event with data
+	 */
+	private void computeAction(final TouchEvent event) {
+		Action newAction = Action.INVALID;
+		if (amountOfFingers == 2) {
+			newAction = Action.ZOOM;
+		} else if (amountOfFingers == 1) {
+			newAction = Action.PAN;
+		}
+		setAction(newAction, event);
+	}
+
+	/**
+	 * Transition to new action.
+	 * 
+	 * @param newAction action we are moving to
+	 * @param event with data
+	 */
+	private void setAction(final Action newAction, final TouchEvent event) {
+		if (newAction == currentAction) {
+			return;
+		}
+		closeoutOldAction(event);
+		startupNewAction(newAction, event);
+		currentAction = newAction;
+	}
+
+	/**
+	 * Startup new action.
+	 * 
+	 * @param newAction to start
+	 * @param event with data
+	 */
+	private void startupNewAction(final Action newAction, final TouchEvent event) {
+		if (newAction == Action.PAN) {
+			widgetToTouch.fireEvent(new PanStartEvent(((Touch) event.getChangedTouches().get(0)), computeTargetElement(event.getNativeEvent())));
+			cancelEvent(event.getNativeEvent());
+		}
+	}
+
+	/**
+	 * Close out old action.
+	 * 
+	 * @param event with data
+	 */
+	private void closeoutOldAction(final TouchEvent event) {
+		if (currentAction == Action.PAN) {
+			widgetToTouch.fireEvent(new PanEndEvent(((Touch) event.getChangedTouches().get(0)), computeTargetElement(event.getNativeEvent())));
+		}
 	}
 
 	/**
@@ -141,7 +204,8 @@ public class TouchHelper {
 	 * @param event touch end event.
 	 */
 	public void doTouchEnd(final TouchEndEvent event) {
-		TouchyCanvas.addMessage("Touch End ");
+		amountOfFingers = event.getTouches().length();
+		computeAction(event);
 	}
 
 	/**
@@ -165,15 +229,25 @@ public class TouchHelper {
 		}
 		if (time - lastTouchStart < 300) {
 			cancelEvent(event.getNativeEvent());
-			Element targetElement = null;
-			if (event.getNativeEvent() != null) {
-				targetElement = event.getNativeEvent().getEventTarget().<Element>cast();
-			}
-			widgetToTouch.fireEvent(new DoubleTapEvent(event.getChangedTouches().get(0), targetElement));
+			widgetToTouch.fireEvent(new DoubleTapEvent(event.getChangedTouches().get(0), computeTargetElement(event.getNativeEvent())));
 		}
 		if (amountOfFingers == 1) {
 			lastTouchStart = time;
 		}
+	}
+
+	/**
+	 * Compute target element.
+	 * 
+	 * @param event with target
+	 * @return target element or null
+	 */
+	private Element computeTargetElement(final NativeEvent event) {
+		Element targetElement = null;
+		if (event != null) {
+			targetElement = event.getEventTarget().<Element>cast();
+		}
+		return targetElement;
 	}
 
 	/**
@@ -196,5 +270,32 @@ public class TouchHelper {
 	 */
 	public HandlerRegistration addDoubleTapHandler(final DoubleTapHandler handler) {
 		return (widgetToTouch.addHandler(handler, DoubleTapEvent.getType()));
+	}
+	/**
+	 * Add handler to target.
+	 * 
+	 * @param handler to add
+	 * @return registration
+	 */
+	public HandlerRegistration addPanStartHandler(final PanStartHandler handler) {
+		return (widgetToTouch.addHandler(handler, PanStartEvent.getType()));
+	}
+	/**
+	 * Add handler to target.
+	 * 
+	 * @param handler to add
+	 * @return registration
+	 */
+	public HandlerRegistration addPanEndHandler(final PanEndHandler handler) {
+		return (widgetToTouch.addHandler(handler, PanEndEvent.getType()));
+	}
+	/**
+	 * Add handler to target.
+	 * 
+	 * @param handler to add
+	 * @return registration
+	 */
+	public HandlerRegistration addPanHandler(final PanHandler handler) {
+		return (widgetToTouch.addHandler(handler, PanEvent.getType()));
 	}
 }
