@@ -25,6 +25,13 @@ import per.lambert.touchyCanvas.client.touchHelper.PanHandler;
 import per.lambert.touchyCanvas.client.touchHelper.PanStartEvent;
 import per.lambert.touchyCanvas.client.touchHelper.PanStartHandler;
 import per.lambert.touchyCanvas.client.touchHelper.TouchHelper;
+import per.lambert.touchyCanvas.client.touchHelper.TouchInformation;
+import per.lambert.touchyCanvas.client.touchHelper.ZoomEndEvent;
+import per.lambert.touchyCanvas.client.touchHelper.ZoomEndHandler;
+import per.lambert.touchyCanvas.client.touchHelper.ZoomEvent;
+import per.lambert.touchyCanvas.client.touchHelper.ZoomHandler;
+import per.lambert.touchyCanvas.client.touchHelper.ZoomStartEvent;
+import per.lambert.touchyCanvas.client.touchHelper.ZoomStartHandler;
 
 /**
  * Panel to home a canvas tat can be scaled, panned and zoomed.
@@ -160,6 +167,27 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 			@Override
 			public void onPan(final PanEvent event) {
 				doPan(event);
+			}
+		});
+		touchHelper.addZoomHandler(new ZoomHandler() {
+			
+			@Override
+			public void onZoom(final ZoomEvent event) {
+				doZoom(event);
+			}
+		});
+		touchHelper.addZoomStartHandler(new ZoomStartHandler() {
+			
+			@Override
+			public void onZoomStart(final ZoomStartEvent event) {
+				doZoomStart(event);
+			}
+		});
+		touchHelper.addZoomEndHandler(new ZoomEndHandler() {
+			
+			@Override
+			public void onZoomEnd(final ZoomEndEvent event) {
+				doZoomEnd(event);
 			}
 		});
 	}
@@ -345,12 +373,52 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		double xPos = (event.getRelativeX(canvas.getElement()));
 		double yPos = (event.getRelativeY(canvas.getElement()));
 
+		computeZoom(move, xPos, yPos);
+	}
+
+	/**
+	 * compute zoom.
+	 * @param move in or out.
+	 * @param xPos center x
+	 * @param yPos center y
+	 */
+	private void computeZoom(final int move, final double xPos, final double yPos) {
 		double zoom = DEFAULT_ZOOM;
 		if (move >= 0) {
 			zoom = 1 / DEFAULT_ZOOM;
 		}
 
 		scaleCanvas(xPos, yPos, zoom);
+	}
+	/**
+	 * Distance between fingers.
+	 */
+	private double distance;
+
+	/**
+	 * Handle zoom start event.
+	 * @param event with data
+	 */
+	protected void doZoomStart(final ZoomStartEvent event) {
+		distance = event.getZoomInformation().getStartingDistance();
+	}
+	/**
+	 * Handle zoom end event.
+	 * @param event with data
+	 */
+	protected void doZoomEnd(final ZoomEndEvent event) {
+	}
+	/**
+	 * Handle zoom event.
+	 * @param event with data
+	 */
+	protected void doZoom(final ZoomEvent event) {
+		double currentDistance = event.getZoomInformation().getCurrentDistance();
+		int move = (int)(currentDistance - distance);
+		double xPos = event.getZoomInformation().currentCenterX();
+		double yPos = event.getZoomInformation().currentCenterY();
+		computeZoom(move, xPos, yPos);
+		distance = currentDistance;
 	}
 
 	/**

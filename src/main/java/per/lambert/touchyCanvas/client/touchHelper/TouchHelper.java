@@ -71,6 +71,14 @@ public class TouchHelper {
 	 * Current interaction.
 	 */
 	private Action currentAction = Action.INVALID;
+	/**
+	 * Information for where finger 1 first touched screen.
+	 */
+	private TouchInformation startingFinger1;
+	/**
+	 * Information for where finger 2 first touched screen.
+	 */
+	private TouchInformation startingFinger2;
 
 	/**
 	 * Constructor.
@@ -134,14 +142,31 @@ public class TouchHelper {
 	 */
 	public void doTouchMove(final TouchMoveEvent event) {
 		if (firstMove) {
+			getStartingTouches(event);
 			computeAction(event);
 		} else {
 			if (currentAction == Action.PAN) {
-				widgetToTouch.fireEvent(new PanEvent(event.getChangedTouches().get(0), computeTargetElement(event.getNativeEvent())));
+				widgetToTouch.fireEvent(new PanEvent(event.getChangedTouches().get(0), computeTargetElement(event)));
+				cancelEvent(event.getNativeEvent());
+			} else if (currentAction == Action.ZOOM) {
+				widgetToTouch.fireEvent(new ZoomEvent(startingFinger1, startingFinger2, event));
 				cancelEvent(event.getNativeEvent());
 			}
 		}
 		firstMove = false;
+	}
+
+	/**
+	 * Get starting finger positions.
+	 * 
+	 * @param event with data
+	 */
+	private void getStartingTouches(final TouchMoveEvent event) {
+		startingFinger1 = new TouchInformation(event.getChangedTouches().get(0));
+		startingFinger2 = null;
+		if (event.getChangedTouches().length() > 1) {
+			startingFinger2 = new TouchInformation(event.getChangedTouches().get(1));
+		}
 	}
 
 	/**
@@ -182,7 +207,10 @@ public class TouchHelper {
 	 */
 	private void startupNewAction(final Action newAction, final TouchEvent event) {
 		if (newAction == Action.PAN) {
-			widgetToTouch.fireEvent(new PanStartEvent(((Touch) event.getChangedTouches().get(0)), computeTargetElement(event.getNativeEvent())));
+			widgetToTouch.fireEvent(new PanStartEvent(((Touch) event.getChangedTouches().get(0)), computeTargetElement(event)));
+			cancelEvent(event.getNativeEvent());
+		} else if (newAction == Action.ZOOM) {
+			widgetToTouch.fireEvent(new ZoomStartEvent(startingFinger1, startingFinger2, event));
 			cancelEvent(event.getNativeEvent());
 		}
 	}
@@ -194,7 +222,9 @@ public class TouchHelper {
 	 */
 	private void closeoutOldAction(final TouchEvent event) {
 		if (currentAction == Action.PAN) {
-			widgetToTouch.fireEvent(new PanEndEvent(((Touch) event.getChangedTouches().get(0)), computeTargetElement(event.getNativeEvent())));
+			widgetToTouch.fireEvent(new PanEndEvent(((Touch) event.getChangedTouches().get(0)), computeTargetElement(event)));
+		} else if (newAction == Action.ZOOM) {
+			widgetToTouch.fireEvent(new ZoomEndEvent(startingFinger1, startingFinger2, event));
 		}
 	}
 
@@ -229,7 +259,7 @@ public class TouchHelper {
 		}
 		if (time - lastTouchStart < 300) {
 			cancelEvent(event.getNativeEvent());
-			widgetToTouch.fireEvent(new DoubleTapEvent(event.getChangedTouches().get(0), computeTargetElement(event.getNativeEvent())));
+			widgetToTouch.fireEvent(new DoubleTapEvent(event.getChangedTouches().get(0), computeTargetElement(event)));
 		}
 		if (amountOfFingers == 1) {
 			lastTouchStart = time;
@@ -242,10 +272,10 @@ public class TouchHelper {
 	 * @param event with target
 	 * @return target element or null
 	 */
-	private Element computeTargetElement(final NativeEvent event) {
+	public static Element computeTargetElement(final TouchEvent event) {
 		Element targetElement = null;
-		if (event != null) {
-			targetElement = event.getEventTarget().<Element>cast();
+		if (event.getNativeEvent() != null) {
+			targetElement = event.getNativeEvent().getEventTarget().<Element>cast();
 		}
 		return targetElement;
 	}
@@ -271,6 +301,7 @@ public class TouchHelper {
 	public HandlerRegistration addDoubleTapHandler(final DoubleTapHandler handler) {
 		return (widgetToTouch.addHandler(handler, DoubleTapEvent.getType()));
 	}
+
 	/**
 	 * Add handler to target.
 	 * 
@@ -280,6 +311,7 @@ public class TouchHelper {
 	public HandlerRegistration addPanStartHandler(final PanStartHandler handler) {
 		return (widgetToTouch.addHandler(handler, PanStartEvent.getType()));
 	}
+
 	/**
 	 * Add handler to target.
 	 * 
@@ -289,6 +321,7 @@ public class TouchHelper {
 	public HandlerRegistration addPanEndHandler(final PanEndHandler handler) {
 		return (widgetToTouch.addHandler(handler, PanEndEvent.getType()));
 	}
+
 	/**
 	 * Add handler to target.
 	 * 
@@ -297,5 +330,35 @@ public class TouchHelper {
 	 */
 	public HandlerRegistration addPanHandler(final PanHandler handler) {
 		return (widgetToTouch.addHandler(handler, PanEvent.getType()));
+	}
+
+	/**
+	 * Add handler to target.
+	 * 
+	 * @param handler to add
+	 * @return registration
+	 */
+	public HandlerRegistration addZoomStartHandler(final ZoomStartHandler handler) {
+		return (widgetToTouch.addHandler(handler, ZoomStartEvent.getType()));
+	}
+
+	/**
+	 * Add handler to target.
+	 * 
+	 * @param handler to add
+	 * @return registration
+	 */
+	public HandlerRegistration addZoomEndHandler(final ZoomEndHandler handler) {
+		return (widgetToTouch.addHandler(handler, ZoomEndEvent.getType()));
+	}
+
+	/**
+	 * Add handler to target.
+	 * 
+	 * @param handler to add
+	 * @return registration
+	 */
+	public HandlerRegistration addZoomHandler(final ZoomHandler handler) {
+		return (widgetToTouch.addHandler(handler, ZoomEvent.getType()));
 	}
 }

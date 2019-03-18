@@ -12,30 +12,31 @@ public class TouchInformation {
 	/**
 	 * the touch x-position within the browser document.
 	 */
-	private final int pageX;
+	private int pageX;
 	/**
 	 * the touch y-position within the browser document.
 	 */
-	private final int pageY;
+	private int pageY;
 	/**
 	 * the touch x-position within the browser window's client area.
 	 */
-	private final int clientX;
+	private int clientX;
 	/**
 	 * the touch y-position within the browser window's client area.
 	 */
-	private final int clientY;
+	private int clientY;
 	/**
 	 * the touch x-position on the user's display.
 	 */
-	private final int screenX;
+	private int screenX;
 	/**
 	 * the touch y-position on the user's display.
 	 */
-	private final int screenY;
+	private int screenY;
 
 	/**
 	 * Constructor.
+	 * 
 	 * @param touchInformation touch information
 	 */
 	public TouchInformation(final Touch touchInformation) {
@@ -48,7 +49,28 @@ public class TouchInformation {
 	}
 
 	/**
+	 * Constructor.
+	 */
+	private TouchInformation() {
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public TouchInformation clone() {
+		TouchInformation clone = new TouchInformation();
+		clone.pageX = pageX;
+		clone.pageY = pageY;
+		clone.clientX = clientX;
+		clone.clientY = clientY;
+		clone.screenX = screenX;
+		clone.screenY = screenY;
+		return (clone);
+	}
+
+	/**
 	 * Get the touch x-position within the browser document.
+	 * 
 	 * @return the touch x-position within the browser document.
 	 */
 	public int getPageX() {
@@ -57,6 +79,7 @@ public class TouchInformation {
 
 	/**
 	 * Get the touch y-position within the browser document.
+	 * 
 	 * @return the touch y-position within the browser document.
 	 */
 	public int getPageY() {
@@ -65,6 +88,7 @@ public class TouchInformation {
 
 	/**
 	 * get the touch x-position within the browser window's client area.
+	 * 
 	 * @return the touch x-position within the browser window's client area.
 	 */
 	public int getClientX() {
@@ -73,6 +97,7 @@ public class TouchInformation {
 
 	/**
 	 * get the touch y-position within the browser window's client area.
+	 * 
 	 * @return the touch y-position within the browser window's client area.
 	 */
 	public int getClientY() {
@@ -81,6 +106,7 @@ public class TouchInformation {
 
 	/**
 	 * Get the touch x-position on the user's display.
+	 * 
 	 * @return the touch x-position on the user's display.
 	 */
 	public int getScreenX() {
@@ -89,6 +115,7 @@ public class TouchInformation {
 
 	/**
 	 * Get the touch y-position on the user's display.
+	 * 
 	 * @return the touch y-position on the user's display.
 	 */
 	public int getScreenY() {
