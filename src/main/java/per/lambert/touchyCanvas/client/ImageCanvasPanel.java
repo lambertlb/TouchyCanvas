@@ -414,10 +414,11 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 */
 	protected void doZoom(final ZoomEvent event) {
 		double currentDistance = event.getZoomInformation().getCurrentDistance();
-		int move = (int)(currentDistance - distance);
+		int move = (int)(distance - currentDistance);
 		double xPos = event.getZoomInformation().currentCenterX();
 		double yPos = event.getZoomInformation().currentCenterY();
-		computeZoom(move, xPos, yPos);
+//		computeZoom(move, xPos, yPos);
+		scaleCanvas(xPos, yPos, currentDistance / distance);
 		distance = currentDistance;
 	}
 
@@ -449,6 +450,10 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 * @param event with data.
 	 */
 	protected void doDoubleTap(final DoubleTapEvent event) {
+		offsetX = 0;
+		offsetY = 0;
+		calculateStartingZoom();
+		drawEverything();
 	}
 
 }

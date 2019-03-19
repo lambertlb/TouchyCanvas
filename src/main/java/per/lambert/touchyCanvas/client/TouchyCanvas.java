@@ -58,7 +58,7 @@ public class TouchyCanvas implements EntryPoint {
 		messageArea.setSize("100%", "100%");
 		messageArea.setReadOnly(true);
 		messages.add(messageArea);
-		holder.addSouth(messages, 70);
+		holder.addSouth(messages, 200);
 		imagePanel = new LayoutPanel();
 		imagePanel.setSize("100%", "100%");
 		imageCanvas = new ImageCanvasPanel();

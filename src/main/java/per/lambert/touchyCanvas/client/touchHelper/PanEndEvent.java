@@ -14,20 +14,6 @@ import com.google.gwt.event.shared.GwtEvent.Type;
 public class PanEndEvent extends GwtEvent<PanEndHandler> {
 
 	/**
-	 * Information about touch.
-	 */
-	private TouchInformation touchInformation;
-
-	/**
-	 * Get touch information.
-	 * 
-	 * @return touch information
-	 */
-	public TouchInformation getTouchInformation() {
-		return touchInformation;
-	}
-
-	/**
 	 * Element that was targeted.
 	 */
 	private Element targetElement;
@@ -58,11 +44,9 @@ public class PanEndEvent extends GwtEvent<PanEndHandler> {
 	/**
 	 * Constructor.
 	 * 
-	 * @param touchData data about touch
 	 * @param targetElement element that was targeted.
 	 */
-	public PanEndEvent(final Touch touchData, final Element targetElement) {
-		touchInformation = new TouchInformation(touchData);
+	public PanEndEvent(final Element targetElement) {
 		this.targetElement = targetElement;
 	}
 	/**

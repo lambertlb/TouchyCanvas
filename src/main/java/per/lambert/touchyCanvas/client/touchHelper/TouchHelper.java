@@ -146,14 +146,13 @@ public class TouchHelper {
 			computeAction(event);
 		} else {
 			if (currentAction == Action.PAN) {
-				widgetToTouch.fireEvent(new PanEvent(event.getChangedTouches().get(0), computeTargetElement(event)));
-				cancelEvent(event.getNativeEvent());
+				widgetToTouch.fireEvent(new PanEvent(event.getTouches().get(0), computeTargetElement(event)));
 			} else if (currentAction == Action.ZOOM) {
 				widgetToTouch.fireEvent(new ZoomEvent(startingFinger1, startingFinger2, event));
-				cancelEvent(event.getNativeEvent());
 			}
 		}
 		firstMove = false;
+		cancelEvent(event.getNativeEvent());
 	}
 
 	/**
@@ -162,10 +161,10 @@ public class TouchHelper {
 	 * @param event with data
 	 */
 	private void getStartingTouches(final TouchMoveEvent event) {
-		startingFinger1 = new TouchInformation(event.getChangedTouches().get(0));
+		startingFinger1 = new TouchInformation(event.getTouches().get(0));
 		startingFinger2 = null;
-		if (event.getChangedTouches().length() > 1) {
-			startingFinger2 = new TouchInformation(event.getChangedTouches().get(1));
+		if (event.getTouches().length() > 1) {
+			startingFinger2 = new TouchInformation(event.getTouches().get(1));
 		}
 	}
 
@@ -207,11 +206,9 @@ public class TouchHelper {
 	 */
 	private void startupNewAction(final Action newAction, final TouchEvent event) {
 		if (newAction == Action.PAN) {
-			widgetToTouch.fireEvent(new PanStartEvent(((Touch) event.getChangedTouches().get(0)), computeTargetElement(event)));
-			cancelEvent(event.getNativeEvent());
+			widgetToTouch.fireEvent(new PanStartEvent(((Touch) event.getTouches().get(0)), computeTargetElement(event)));
 		} else if (newAction == Action.ZOOM) {
 			widgetToTouch.fireEvent(new ZoomStartEvent(startingFinger1, startingFinger2, event));
-			cancelEvent(event.getNativeEvent());
 		}
 	}
 
@@ -222,9 +219,9 @@ public class TouchHelper {
 	 */
 	private void closeoutOldAction(final TouchEvent event) {
 		if (currentAction == Action.PAN) {
-			widgetToTouch.fireEvent(new PanEndEvent(((Touch) event.getChangedTouches().get(0)), computeTargetElement(event)));
-		} else if (newAction == Action.ZOOM) {
-			widgetToTouch.fireEvent(new ZoomEndEvent(startingFinger1, startingFinger2, event));
+			widgetToTouch.fireEvent(new PanEndEvent(computeTargetElement(event)));
+		} else if (currentAction == Action.ZOOM) {
+			widgetToTouch.fireEvent(new ZoomEndEvent(event));
 		}
 	}
 
@@ -234,8 +231,7 @@ public class TouchHelper {
 	 * @param event touch end event.
 	 */
 	public void doTouchEnd(final TouchEndEvent event) {
-		amountOfFingers = event.getTouches().length();
-		computeAction(event);
+		setAction(Action.INVALID, event);
 	}
 
 	/**
@@ -245,6 +241,7 @@ public class TouchHelper {
 	 */
 	public void doTouchCancel(final TouchCancelEvent event) {
 		TouchyCanvas.addMessage("Touch Cancel ");
+		cancelEvent(event.getNativeEvent());
 	}
 
 	/**
@@ -259,7 +256,7 @@ public class TouchHelper {
 		}
 		if (time - lastTouchStart < 300) {
 			cancelEvent(event.getNativeEvent());
-			widgetToTouch.fireEvent(new DoubleTapEvent(event.getChangedTouches().get(0), computeTargetElement(event)));
+			widgetToTouch.fireEvent(new DoubleTapEvent(event.getTouches().get(0), computeTargetElement(event)));
 		}
 		if (amountOfFingers == 1) {
 			lastTouchStart = time;

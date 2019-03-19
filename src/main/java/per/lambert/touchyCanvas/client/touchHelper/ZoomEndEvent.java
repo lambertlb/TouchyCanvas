@@ -28,19 +28,6 @@ public class ZoomEndEvent extends GwtEvent<ZoomEndHandler> {
 	}
 
 	/**
-	 * Information about zoom operation.
-	 */
-	private ZoomInformation zoomInformation;
-	
-	/**
-	 * Information about zoom operation.
-	 * @return zoom information
-	 */
-	public ZoomInformation getZoomInformation() {
-		return zoomInformation;
-	}
-
-	/**
 	 * Type of event.
 	 */
 	private static Type<ZoomEndHandler> eventType = new Type<ZoomEndHandler>();
@@ -57,13 +44,10 @@ public class ZoomEndEvent extends GwtEvent<ZoomEndHandler> {
 	/**
 	 * Constructor.
 	 * 
-	 * @param startingFinger1 starting finger1 position.
-	 * @param startingFinger2 starting finger2 position.
 	 * @param targetElement element that was targeted.
 	 */
-	public ZoomEndEvent(final TouchInformation startingFinger1, final TouchInformation startingFinger2, final TouchEvent targetElement) {
+	public ZoomEndEvent(final TouchEvent targetElement) {
 		this.targetElement = TouchHelper.computeTargetElement(targetElement);
-		zoomInformation = new ZoomInformation(startingFinger1, startingFinger2, targetElement);
 	}
 
 	/**
