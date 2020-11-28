@@ -1,6 +1,7 @@
 package per.lambert.touchyCanvas.client;
 
 import com.google.gwt.canvas.client.Canvas;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.event.dom.client.LoadEvent;
 import com.google.gwt.event.dom.client.LoadHandler;
@@ -49,6 +50,10 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 */
 	private static final double DEFAULT_ZOOM = 1.1;
 	/**
+	 * Maximum zoom factor.
+	 */
+	private static final double MAX_ZOOM = .5;
+	/**
 	 * Image with picture.
 	 */
 	private Image image;
@@ -88,10 +93,6 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 * current zoom factor for image.
 	 */
 	private double totalZoom = 1;
-	/**
-	 * Maximum zoom factor. We do not allow zooming out farther than the initial calculated zoom that fills the parent.
-	 */
-	private double maxZoom = .05;
 	/**
 	 * Offset of image in the horizontal direction.
 	 */
@@ -223,42 +224,30 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		parentHeight = heightOfParent;
 		imageWidth = image.getWidth();
 		imageHeight = image.getHeight();
-
-		canvas.setWidth(parentWidth + "px");
-		canvas.setCoordinateSpaceWidth(parentWidth);
-		canvas.setHeight(parentHeight + "px");
-		canvas.setCoordinateSpaceHeight(parentHeight);
-
-		backCanvas.setWidth(parentWidth + "px");
-		backCanvas.setCoordinateSpaceWidth(parentWidth);
-		backCanvas.setHeight(parentHeight + "px");
-		backCanvas.setCoordinateSpaceHeight(parentHeight);
-
+		sizeACanvas(canvas);
+		sizeACanvas(backCanvas);
 		calculateStartingZoom();
 		backCanvas.getContext2d().setTransform(totalZoom, 0, 0, totalZoom, 0, 0);
 		drawEverything();
 	}
 
 	/**
-	 * Calculate the starting zoom factor so that one side of the image exactly fills the parent.
+	 * Adjust canvas size to parent size.
+	 * 
+	 * @param canvas to adjust
 	 */
-	private void calculateStartingZoom() {
-		if (isScaleByWidth()) {
-			totalZoom = (double) parentWidth / (double) imageWidth;
-		} else {
-			totalZoom = (double) parentHeight / (double) imageHeight;
-		}
+	private void sizeACanvas(final Canvas canvas) {
+		canvas.setWidth(parentWidth + "px");
+		canvas.setCoordinateSpaceWidth(parentWidth);
+		canvas.setHeight(parentHeight + "px");
+		canvas.setCoordinateSpaceHeight(parentHeight);
 	}
 
 	/**
-	 * Should we scale by width.
-	 * 
-	 * @return true if we should scale by width
+	 * Calculate the starting zoom factor so that one side of the image exactly fills the parent.
 	 */
-	private boolean isScaleByWidth() {
-		double scaleWidth = (double) parentWidth / (double) imageWidth;
-		double scaleHeight = (double) parentHeight / (double) imageHeight;
-		return scaleWidth < scaleHeight;
+	private void calculateStartingZoom() {
+		totalZoom = 1;
 	}
 
 	/**
@@ -293,9 +282,30 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 * @param event with data
 	 */
 	protected void doPanStart(final PanStartEvent event) {
-		mouseDownXPos = event.getTouchInformation().getPageX();
-		mouseDownYPos = event.getTouchInformation().getPageY();
+		mouseDownXPos = getRelativeX(event.getTouchInformation(), canvas.getElement());
+		mouseDownYPos = getRelativeY(event.getTouchInformation(), canvas.getElement());
 		this.mouseDown = true;
+	}
+	/**
+	 * Get X coordinate relative between touch and target element.
+	 * 
+	 * @param touchInformation touch information
+	 * @param target widget
+	 * @return X coordinate relative between mouse click and target element.
+	 */
+	public int getRelativeX(final TouchInformation touchInformation, final Element target) {
+		return touchInformation.getClientX() - target.getAbsoluteLeft() + target.getScrollLeft() + target.getOwnerDocument().getScrollLeft();
+	}
+
+	/**
+	 * Get Y coordinate relative between touch and target element.
+	 * 
+	 * @param touchInformation touch information
+	 * @param target widget
+	 * @return Y coordinate relative between mouse click and target element.
+	 */
+	public int getRelativeY(final TouchInformation touchInformation, final Element target) {
+		return touchInformation.getClientY() - target.getAbsoluteTop() + target.getScrollTop() + target.getOwnerDocument().getScrollTop();
 	}
 
 	/**
@@ -373,23 +383,13 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		double xPos = (event.getRelativeX(canvas.getElement()));
 		double yPos = (event.getRelativeY(canvas.getElement()));
 
-		computeZoom(move, xPos, yPos);
-	}
-
-	/**
-	 * compute zoom.
-	 * @param move in or out.
-	 * @param xPos center x
-	 * @param yPos center y
-	 */
-	private void computeZoom(final int move, final double xPos, final double yPos) {
-		double zoom = DEFAULT_ZOOM;
+		double deltaZoom = DEFAULT_ZOOM;
 		if (move >= 0) {
-			zoom = 1 / DEFAULT_ZOOM;
+			deltaZoom = 1 / DEFAULT_ZOOM;
 		}
-
-		scaleCanvas(xPos, yPos, zoom);
+		zoomCanvas(xPos, yPos, deltaZoom);
 	}
+
 	/**
 	 * Distance between fingers.
 	 */
@@ -414,30 +414,28 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 */
 	protected void doZoom(final ZoomEvent event) {
 		double currentDistance = event.getZoomInformation().getCurrentDistance();
-		int move = (int)(distance - currentDistance);
 		double xPos = event.getZoomInformation().currentCenterX();
 		double yPos = event.getZoomInformation().currentCenterY();
-//		computeZoom(move, xPos, yPos);
-		scaleCanvas(xPos, yPos, currentDistance / distance);
+		zoomCanvas(xPos, yPos, currentDistance / distance);
 		distance = currentDistance;
 	}
 
 	/**
-	 * Scale canvas base on delta mouse positions.
+	 * Zoom canvas base on delta positions.
 	 * 
 	 * @param xPos current X
 	 * @param yPos current Y
-	 * @param zoom zoom factor
+	 * @param deltaZoom delta zoom factor
 	 */
-	private void scaleCanvas(final double xPos, final double yPos, final double zoom) {
+	private void zoomCanvas(final double xPos, final double yPos, final double deltaZoom) {
 		double newX = (xPos - offsetX) / totalZoom;
 		double newY = (yPos - offsetY) / totalZoom;
-		double xPosition = (-newX * zoom) + newX;
-		double yPosition = (-newY * zoom) + newY;
+		double xPosition = (-newX * deltaZoom) + newX;
+		double yPosition = (-newY * deltaZoom) + newY;
 
-		double newZoom = zoom * totalZoom;
-		if (newZoom < maxZoom) {
-			newZoom = maxZoom;
+		double newZoom = deltaZoom * totalZoom;
+		if (newZoom < MAX_ZOOM) {
+			newZoom = MAX_ZOOM;
 		} else {
 			offsetX += (xPosition * totalZoom);
 			offsetY += (yPosition * totalZoom);
@@ -445,6 +443,7 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		totalZoom = newZoom;
 		drawEverything();
 	}
+
 	/**
 	 * Handle double tap.
 	 * @param event with data.
