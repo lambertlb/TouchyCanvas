@@ -1,4 +1,19 @@
-package per.lambert.touchyCanvas.client.touchHelper;
+/*
+ * Copyright (C) 2019 Leon Lambert.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package per.lambert.ebattleMat.client.touchHelper;
 
 import java.util.Date;
 
@@ -16,10 +31,7 @@ import com.google.gwt.event.dom.client.TouchMoveHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.event.dom.client.TouchStartHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Widget;
-
-import per.lambert.touchyCanvas.client.TouchyCanvas;
 
 /**
  * Helper to encapsulate functions for managing touches.
@@ -64,7 +76,7 @@ public class TouchHelper {
 	 */
 	private int amountOfFingers;
 	/**
-	 * Time of last start.
+	 * Time of last touch start.
 	 */
 	private long lastTouchStart;
 	/**
@@ -87,41 +99,68 @@ public class TouchHelper {
 	 */
 	public TouchHelper(final Widget widgetToTouch) {
 		HasAllTouchHandlers touchHandlers;
+		this.widgetToTouch = widgetToTouch;
 		if (!(widgetToTouch instanceof HasAllTouchHandlers)) {
-			Window.alert("Does not handle touches");
+			addTouchDOMHandlers(widgetToTouch);
 			return;
 		}
-		this.widgetToTouch = widgetToTouch;
 		touchHandlers = (HasAllTouchHandlers) widgetToTouch;
 
 		touchHandlers.addTouchStartHandler(new TouchStartHandler() {
-
 			@Override
 			public void onTouchStart(final TouchStartEvent event) {
 				doTouchStart(event);
 			}
 		});
 		touchHandlers.addTouchEndHandler(new TouchEndHandler() {
-
 			@Override
 			public void onTouchEnd(final TouchEndEvent event) {
 				doTouchEnd(event);
 			}
 		});
 		touchHandlers.addTouchMoveHandler(new TouchMoveHandler() {
-
 			@Override
 			public void onTouchMove(final TouchMoveEvent event) {
 				doTouchMove(event);
 			}
 		});
 		touchHandlers.addTouchCancelHandler(new TouchCancelHandler() {
-
 			@Override
 			public void onTouchCancel(final TouchCancelEvent event) {
 				doTouchCancel(event);
 			}
 		});
+	}
+
+	/**
+	 * Add touch handlers.
+	 * @param widgetToTouch widget that accepts touches.
+	 */
+	private void addTouchDOMHandlers(final Widget widgetToTouch) {
+		widgetToTouch.addDomHandler(new TouchStartHandler() {
+			@Override
+			public void onTouchStart(final TouchStartEvent event) {
+				doTouchStart(event);
+			}
+		}, TouchStartEvent.getType());
+		widgetToTouch.addDomHandler(new TouchEndHandler() {
+			@Override
+			public void onTouchEnd(final TouchEndEvent event) {
+				doTouchEnd(event);
+			}
+		}, TouchEndEvent.getType());
+		widgetToTouch.addDomHandler(new TouchMoveHandler() {
+			@Override
+			public void onTouchMove(final TouchMoveEvent event) {
+				doTouchMove(event);
+			}
+		}, TouchMoveEvent.getType());
+		widgetToTouch.addDomHandler(new TouchCancelHandler() {
+			@Override
+			public void onTouchCancel(final TouchCancelEvent event) {
+				doTouchCancel(event);
+			}
+		}, TouchCancelEvent.getType());
 	}
 
 	/**
@@ -173,6 +212,7 @@ public class TouchHelper {
 	 * 
 	 * @param event with data
 	 */
+	@SuppressWarnings("rawtypes")
 	private void computeAction(final TouchEvent event) {
 		Action newAction = Action.INVALID;
 		if (amountOfFingers == 2) {
@@ -189,6 +229,7 @@ public class TouchHelper {
 	 * @param newAction action we are moving to
 	 * @param event with data
 	 */
+	@SuppressWarnings("rawtypes")
 	private void setAction(final Action newAction, final TouchEvent event) {
 		if (newAction == currentAction) {
 			return;
@@ -204,6 +245,7 @@ public class TouchHelper {
 	 * @param newAction to start
 	 * @param event with data
 	 */
+	@SuppressWarnings("rawtypes")
 	private void startupNewAction(final Action newAction, final TouchEvent event) {
 		if (newAction == Action.PAN) {
 			widgetToTouch.fireEvent(new PanStartEvent(((Touch) event.getTouches().get(0)), computeTargetElement(event)));
@@ -217,6 +259,7 @@ public class TouchHelper {
 	 * 
 	 * @param event with data
 	 */
+	@SuppressWarnings("rawtypes")
 	private void closeoutOldAction(final TouchEvent event) {
 		if (currentAction == Action.PAN) {
 			widgetToTouch.fireEvent(new PanEndEvent(computeTargetElement(event)));
@@ -240,7 +283,6 @@ public class TouchHelper {
 	 * @param event touch cancel event.
 	 */
 	public void doTouchCancel(final TouchCancelEvent event) {
-		TouchyCanvas.addMessage("Touch Cancel ");
 		cancelEvent(event.getNativeEvent());
 	}
 
@@ -269,6 +311,7 @@ public class TouchHelper {
 	 * @param event with target
 	 * @return target element or null
 	 */
+	@SuppressWarnings("rawtypes")
 	public static Element computeTargetElement(final TouchEvent event) {
 		Element targetElement = null;
 		if (event.getNativeEvent() != null) {
