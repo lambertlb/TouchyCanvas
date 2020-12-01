@@ -50,13 +50,13 @@
 			<artifactId>gwt-dev</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.13.1</version>
 			<scope>test</scope>
 		</dependency>
-
+ -->
 		<!-- from example https://github.com/jetty-project/embedded-jetty-jsp/blob/master/pom.xml -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
