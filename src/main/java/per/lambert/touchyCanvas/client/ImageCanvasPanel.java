@@ -65,10 +65,6 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 */
 	private static final double DEFAULT_ZOOM = 1.1;
 	/**
-	 * Maximum zoom factor.
-	 */
-	private static final double MAX_ZOOM = .5;
-	/**
 	 * Image with picture.
 	 */
 	private Image image;
@@ -108,6 +104,10 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 * current zoom factor for image.
 	 */
 	private double totalZoom = 1;
+	/**
+	 * Maximum zoom factor. We do not allow zooming out farther than the initial calculated zoom that fills the parent.
+	 */
+	private double maxZoom = .05;
 	/**
 	 * Offset of image in the horizontal direction.
 	 */
@@ -259,10 +259,25 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	}
 
 	/**
-	 * Calculate the starting zoom factor so that one side of the image exactly fills the parent.
+	 * Calculate the starting zoom factor so that one side of the image exactly fills the parent.					   
 	 */
 	private void calculateStartingZoom() {
-		totalZoom = 1;
+		if (isScaleByWidth()) {
+			totalZoom = (double) parentWidth / (double) imageWidth;
+		} else {
+			totalZoom = (double) parentHeight / (double) imageHeight;
+		}
+	}
+
+	/**
+	 * Should we scale by width.
+	 * 
+	 * @return true if we should scale by width
+	 */
+	private boolean isScaleByWidth() {
+		double scaleWidth = (double) parentWidth / (double) imageWidth;
+		double scaleHeight = (double) parentHeight / (double) imageHeight;
+		return scaleWidth < scaleHeight;
 	}
 
 	/**
@@ -449,8 +464,8 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		double yPosition = (-newY * deltaZoom) + newY;
 
 		double newZoom = deltaZoom * totalZoom;
-		if (newZoom < MAX_ZOOM) {
-			newZoom = MAX_ZOOM;
+		if (newZoom < maxZoom) {
+			newZoom = maxZoom;
 		} else {
 			offsetX += (xPosition * totalZoom);
 			offsetY += (yPosition * totalZoom);
