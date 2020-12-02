@@ -2,8 +2,12 @@
 
 This project is to show how to use mobile gestures in a GWT APP.
 I made a Touch Helper class to encapsulate the functionality is takes
-to translate gesture primitive actions into higher level ones such
-as PAN and ZOOM.
+to translate gesture primitive actions into higher level ones.
+It currently supports PAN, ZOOM and DOUBLE TAP.
+
+If you are interested in how to add overlays to the canvas look at my project [ElectronicBattleMat](https://github.com/lambertlb/ElectronicBattleMat).
+File [BattleMatCanvas.java](https://github.com/lambertlb/ElectronicBattleMat/blob/master/src/main/java/per/lambert/ebattleMat/client/battleMatDisplay/BattleMatCanvas.java)
+shows how I used overlays on the canvas.
 
 ## Building
 This project is based on [Google Web Toolkit](http://www.gwtproject.org/). 
@@ -31,5 +35,4 @@ where you un-zipped the SDK.
    into Workspace.
 
 ### License
-
-These projects are licensed under the [MIT](LICENSE.TXT) license.
+This project is licensed under the [APACHE V2](LICENSE.TXT) license.

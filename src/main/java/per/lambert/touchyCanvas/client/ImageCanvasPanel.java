@@ -50,7 +50,8 @@ import per.lambert.touchyCanvas.client.touchHelper.ZoomStartEvent;
 import per.lambert.touchyCanvas.client.touchHelper.ZoomStartHandler;
 
 /**
- * Panel to home a canvas that can be scaled, panned and zoomed.
+ * Panel to house a canvas that can be scaled, panned and zoomed.
+ * This is an example on how to use Touch Helper and its events along with normal mouse events for same thing.
  * 
  * @author LLambert
  *
@@ -129,7 +130,7 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 */
 	private double mouseDownYPos = 0;
 	/**
-	 * Helper for mobile touches.
+	 * Helper for mobile gestures.
 	 */
 	private TouchHelper touchHelper;
 
@@ -155,8 +156,17 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		canvas.addMouseUpHandler(this);
 
 		super.add(canvas, 0, 0);
+		/**
+		 * Add panel off screen so event fires when image loaded but is not displayed.
+		 */
 		super.add(hiddenPanel, -1, -1);
+		/**
+		 * Add touch helper to canvas
+		 */
 		touchHelper = new TouchHelper(canvas);
+		/**
+		 * Add events for gestures
+		 */
 		touchHelper.addDoubleTapHandler(new DoubleTapHandler() {
 			
 			@Override
@@ -216,7 +226,6 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	public void setImage(final String imageURL) {
 		image.setUrl(imageURL);
 	}
-
 	/**
 	 * Called when image is loaded.
 	 */
@@ -227,7 +236,6 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		this.imageElement = (ImageElement) image.getElement().cast();
 		parentWidthChanged(getParent().getOffsetWidth(), getParent().getOffsetHeight());
 	}
-
 	/**
 	 * Parent window size has changed.
 	 * 
@@ -296,6 +304,9 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	public final void handleAllDrawing() {
 		canvas.getContext2d().clearRect(CLEAR_OFFEST, CLEAR_OFFEST, parentWidth + 100, parentHeight + 100);
 		canvas.getContext2d().drawImage(backCanvas.getCanvasElement(), 0, 0);
+		/**
+		 * You can add any overlays that are needed at this point
+		 */
 	}
 
 	/**
@@ -359,7 +370,9 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	@Override
 	public void onMouseMove(final MouseMoveEvent event) {
 		if (mouseDown) {
-			handleMouseMove(event);
+			double xPos = event.getRelativeX(image.getElement());
+			double yPos = event.getRelativeY(image.getElement());
+			handleCanvasMove(xPos, yPos);
 		}
 	}
 	/**
@@ -371,20 +384,6 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		double yPos = event.getTouchInformation().getPageY();
 		handleCanvasMove(xPos, yPos);
 	}
-
-
-
-	/**
-	 * Handle mouse move.
-	 * 
-	 * @param event event data
-	 */
-	private void handleMouseMove(final MouseMoveEvent event) {
-		double xPos = event.getRelativeX(image.getElement());
-		double yPos = event.getRelativeY(image.getElement());
-		handleCanvasMove(xPos, yPos);
-	}
-
 	/**
 	 * Handle panning canvas.
 	 * 
@@ -424,7 +423,6 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 	 * Distance between fingers.
 	 */
 	private double distance;
-
 	/**
 	 * Handle zoom start event.
 	 * @param event with data
@@ -473,7 +471,6 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		totalZoom = newZoom;
 		drawEverything();
 	}
-
 	/**
 	 * Handle double tap.
 	 * @param event with data.
@@ -484,5 +481,4 @@ public class ImageCanvasPanel extends AbsolutePanel implements MouseWheelHandler
 		calculateStartingZoom();
 		drawEverything();
 	}
-
 }
