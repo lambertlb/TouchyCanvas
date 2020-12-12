@@ -64,6 +64,10 @@ public class TouchHelper {
 	}
 
 	/**
+	 * Amount of time between touches for detecting double tap
+	 */
+	private static final int DoubleTapDetectTime = 300;
+	/**
 	 * Widget that was touched.
 	 */
 	private Widget widgetToTouch;
@@ -98,13 +102,12 @@ public class TouchHelper {
 	 * @param widgetToTouch widget with base touch events.
 	 */
 	public TouchHelper(final Widget widgetToTouch) {
-		HasAllTouchHandlers touchHandlers;
 		this.widgetToTouch = widgetToTouch;
 		if (!(widgetToTouch instanceof HasAllTouchHandlers)) {
 			addTouchDOMHandlers(widgetToTouch);
 			return;
 		}
-		touchHandlers = (HasAllTouchHandlers) widgetToTouch;
+		HasAllTouchHandlers touchHandlers = (HasAllTouchHandlers) widgetToTouch;
 
 		touchHandlers.addTouchStartHandler(new TouchStartHandler() {
 			@Override
@@ -296,7 +299,7 @@ public class TouchHelper {
 		if (amountOfFingers > 1) {
 			lastTouchStart = 0;
 		}
-		if (time - lastTouchStart < 300) {
+		if (time - lastTouchStart < DoubleTapDetectTime) {
 			cancelEvent(event.getNativeEvent());
 			widgetToTouch.fireEvent(new DoubleTapEvent(event.getTouches().get(0), computeTargetElement(event)));
 		}
